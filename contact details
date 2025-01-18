@@ -1,66 +1,68 @@
-contacts = []
+import tkinter as t
+from tkinter import messagebox
 
-def add_contact():
-    name = input("Enter name: ")
-    phone = input("Enter phone number: ")
-    email = input("Enter email: ")
-    address = input("Enter address: ")
-    contacts.append({"name": name, "phone": phone, "email": email, "address": address})
-    print("Contact added successfully!")
+contacts = {}
 
-def view_contacts():
-    if not contacts:
-        print("No contacts available.")
-        return
 
-    print("\nContact List:")
-    for idx, contact in enumerate(contacts, start=1):
-        print(f"{idx}. {contact['name']} - {contact['phone']}")
+def save_contact():
+    name = name_entry.get()
+    phone = phone_entry.get()
 
-def search_contact():
-    query = input("Enter name or phone number to search: ")
-    for contact in contacts:
-        if query.lower() in contact["name"].lower() or query in contact["phone"]:
-            print(f"Name: {contact['name']}, Phone: {contact['phone']}, Email: {contact['email']}, Address: {contact['address']}")
-            return
-    print("No matching contact found.")
+    if name and phone:  
+        contacts[name] = phone 
+        update_contact_list()
+        name_entry.delete(0, t.END)
+        phone_entry.delete(0, t.END)
+        messagebox.showinfo("Success", "Contact saved successfully!")
+    else:
+        messagebox.showerror("Error", "Please enter both name and phone!")
 
 def delete_contact():
-    view_contacts()
-    try:
-        index = int(input("Enter the contact number to delete: ")) - 1
-        if 0 <= index < len(contacts):
-            contacts.pop(index)
-            print("Contact deleted successfully!")
-        else:
-            print("Invalid contact number.")
-    except ValueError:
-        print("Please enter a valid number.")
+    selected = contact_list.curselection()
+    if selected:
+        contact = contact_list.get(selected)
+        name = contact.split(":")[0] 
+        del contacts[name] 
+        update_contact_list()
+        messagebox.showinfo("Success", f"Deleted contact: {name}")
+    else:
+        messagebox.showerror("Error", "Please select a contact to delete!")
 
-def main():
-    while True:
-        print("\n    Contact Manager  ")
-        print("1. Add Contact")
-        print("2. View Contact List")
-        print("3. Search Contact")
-        print("4. Delete Contact")
-        print("5. Exit")
+def update_contact_list():
+    contact_list.delete(0, t.END) 
+    for name, phone in contacts.items():
+        contact_list.insert(t.END, f"{name}: {phone}")
 
-        choice = input("Enter your choice: ")
+def load_contact():
+    selected = contact_list.curselection()
+    if selected:
+        contact = contact_list.get(selected)
+        name, phone = contact.split(": ")
+        name_entry.delete(0, t.END)
+        phone_entry.delete(0, t.END)
+        name_entry.insert(0, name)
+        phone_entry.insert(0, phone)
+    else:
+        messagebox.showerror("Error", "Please select a contact to load!")
 
-        if choice == "1":
-            add_contact()
-        elif choice == "2":
-            view_contacts()
-        elif choice == "3":
-            search_contact()
-        elif choice == "4":
-            delete_contact()
-        elif choice == "5":
-            print("Goodbye!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+window = t.Tk()
+window.title("Contact Book")
+window.geometry("400x400")
 
-if __name__ == "__main__":
-    main()
+t.Label(window, text="Name:").pack(pady=5)
+name_entry = t.Entry(window, width=30)
+name_entry.pack()
+
+t.Label(window, text="Phone:").pack(pady=5)
+phone_entry = t.Entry(window, width=30)
+phone_entry.pack()
+
+t.Button(window, text="Save Contact", command=save_contact, bg="lightgrey").pack(pady=5)
+t.Button(window, text="Delete Contact", command=delete_contact, bg="lightgrey").pack(pady=5)
+t.Button(window, text="Update Contact", command=load_contact, bg="lightgrey").pack(pady=5)
+
+t.Label(window, text="Contact List:").pack(pady=5)
+contact_list = t.Listbox(window, width=40, height=10)
+contact_list.pack()
+
+window.mainloop()
